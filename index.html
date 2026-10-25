@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual-Document Retrieval Using ColPali | Vijay Ramchandra Bhange | Trinity Academy of Engineering</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- KaTeX for Math -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+            trinity: {
+              maroon: '#800000',
+              gold: '#d4af37',
+              shield: '#8c1515',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.85);
+    }
+    .heatmap-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      mix-blend-mode: multiply;
+      transition: opacity 0.25s ease;
+    }
+    .token-chip {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .token-chip:hover, .token-chip.active {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- Institutional Top Header (With Official College Logo & NAAC Seal) -->
+  <div class="bg-gradient-to-r from-slate-950 via-[#1a0a0a] to-slate-900 text-white border-b border-amber-900/40 px-4 py-2.5 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+      
+      <!-- College Branding with Real Logo -->
+      <div class="flex items-center space-x-3.5">
+        <img src="assets/trinity_logo.png" alt="Trinity Academy of Engineering Logo" class="h-12 w-auto object-contain drop-shadow-md bg-white/5 p-1 rounded-md">
+        <div>
+          <div class="font-extrabold tracking-wide text-amber-300 uppercase text-xs sm:text-sm flex items-center gap-2">
+            <span>KJ's Educational Institute &bull; Trinity Academy of Engineering, Pune</span>
+          </div>
+          <div class="text-slate-300 text-[11px] font-medium flex items-center gap-2 mt-0.5">
+            <span class="text-emerald-400 font-semibold">DEPARTMENT OF INFORMATION TECHNOLOGY</span>
+            <span class="text-slate-500">&bull;</span>
+            <span class="text-slate-400">Savitribai Phule Pune University (SPPU)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAAC Seal & Guide Info -->
+      <div class="flex items-center space-x-4">
+        <img src="assets/naac_logo.png" alt="NAAC A+ Accredited" class="h-10 w-auto object-contain drop-shadow">
+        <div class="text-right hidden sm:block border-l border-white/10 pl-3">
+          <div class="text-[11px] text-slate-300">Under the Guidance of: <strong class="text-amber-300">Prof. Gulnaz Thakur</strong></div>
+          <div class="text-[11px] text-slate-400">Academic Year: <span class="text-emerald-300 font-bold">2026–2027</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Primary Sticky Navigation Bar -->
+  <header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-amber-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+          <i class="fa-solid fa-eye text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 via-indigo-800 to-amber-700 bg-clip-text text-transparent">ColPali Visual RAG</span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase">Live Engine</span>
+          </div>
+          <div class="text-[11px] text-slate-500 font-medium">
+            Presenter: <strong class="text-slate-800">Mr. Vijay Ramchandra Bhange</strong> (Roll No: 06)
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="hidden lg:flex items-center space-x-1">
+        <button onclick="switchTab('demo')" id="nav-demo" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors text-blue-700 bg-blue-50">
+          <i class="fa-solid fa-play mr-1 text-[10px]"></i>Visual Simulator
+        </button>
+        <button onclick="switchTab('synopsis')" id="nav-synopsis" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-file-invoice mr-1 text-[10px]"></i>Full Synopsis
+        </button>
+        <button onclick="switchTab('arch')" id="nav-arch" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-network-wired mr-1 text-[10px]"></i>Architecture
+        </button>
+        <button onclick="switchTab('rag-compare')" id="nav-rag-compare" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-layer-group mr-1 text-[10px]"></i>4 RAG Comparison
+        </button>
+        <button onclick="switchTab('slides')" id="nav-slides" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-person-chalkboard mr-1 text-[10px]"></i>Seminar PPT
+        </button>
+        <button onclick="switchTab('benchmark')" id="nav-benchmark" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-chart-column mr-1 text-[10px]"></i>ViDoRe Benchmark
+        </button>
+        <button onclick="switchTab('viva')" id="nav-viva" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-circle-question mr-1 text-[10px]"></i>Viva Q&A
+        </button>
+        <button onclick="switchTab('profile')" id="nav-profile" class="nav-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+          <i class="fa-solid fa-id-card mr-1 text-[10px]"></i>Student & Guide
+        </button>
+      </nav>
+
+      <!-- Action Items & Direct LinkedIn Button -->
+      <div class="flex items-center space-x-2">
+        <a href="https://www.linkedin.com/in/vijaybhange" target="_blank" rel="noopener noreferrer" 
+           class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[#0077b5] hover:bg-[#005f93] shadow-sm transition-all hover:scale-105">
+          <i class="fa-brands fa-linkedin text-sm"></i>
+          <span class="hidden sm:inline">Vijay Bhange</span>
+          <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-0.5"></i>
+        </a>
+        <button onclick="switchTab('synopsis')" class="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 shadow-sm transition-all">
+          <i class="fa-solid fa-scroll text-amber-600"></i>
+          <span>Synopsis</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Technical System Banner -->
+  <div class="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white py-2 px-4 text-xs font-mono flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+    <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span> Engine: <strong>PyTorch 128-d Tensor Core Active</strong></span>
+    <span class="text-slate-500">|</span>
+    <span>Seminar: <strong>Visual-Document Retrieval Using ColPali</strong></span>
+    <span class="text-slate-500">|</span>
+    <span>Candidate: <strong class="text-amber-300">Vijay Ramchandra Bhange (06)</strong></span>
+    <span class="text-slate-500">|</span>
+    <span class="text-emerald-300">Dept of Information Technology &bull; TAE Pune</span>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: LIVE INTERACTIVE SIMULATOR (DEMO) -->
+    <!-- ========================================== -->
+    <section id="tab-demo" class="tab-content space-y-6">
+      
+      <!-- Intro Hero Banner -->
+      <div class="rounded-2xl p-6 sm:p-8 bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white shadow-xl shadow-blue-900/15 relative overflow-hidden border border-blue-800">
+        <div class="relative z-10 max-w-3xl">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-emerald-300 text-xs font-bold uppercase tracking-wider mb-3">
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Department of Information Technology &bull; Trinity Academy of Engineering</span>
+          </div>
+          <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-2">
+            Visual-Document Retrieval Using ColPali
+          </h1>
+          <p class="text-blue-100 text-xs sm:text-sm leading-relaxed mb-4">
+            Traditional RAG pipelines rely on OCR to extract text from documents, losing tables, charts, flowcharts, and 2-column layouts. ColPali represents PDF pages as <strong>2D visual patch multi-vector embeddings</strong> and scores them with <strong>Late Interaction (MaxSim)</strong>. Try selecting any token below to watch the model illuminate its exact visual patch on the document in real time!
+          </p>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm"><i class="fa-solid fa-check text-emerald-300 mr-1"></i> No OCR Error Cascades</span>
+            <span class="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm"><i class="fa-solid fa-check text-emerald-300 mr-1"></i> Native Table & Chart Indexing</span>
+            <span class="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm"><i class="fa-solid fa-check text-emerald-300 mr-1"></i> Explainable Visual Heatmaps</span>
+            <span class="px-2.5 py-1 rounded-md bg-white/15 backdrop-blur-sm"><i class="fa-solid fa-user-check text-amber-300 mr-1"></i> Implemented by Vijay Bhange</span>
+          </div>
+        </div>
+        <div class="absolute -right-12 -bottom-12 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      </div>
+
+      <!-- Controls & Simulator Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Settings, Queries, & MaxSim Breakdown -->
+        <div class="lg:col-span-5 space-y-5">
+          
+          <!-- Document Selector -->
+          <div class="glass-card rounded-xl p-5 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center justify-between">
+              <span>1. Select Evaluation Document Page</span>
+              <span class="text-xs text-blue-600 font-semibold">3 Benchmark Test Cases</span>
+            </h3>
+            <div class="grid grid-cols-3 gap-2">
+              <button onclick="selectDoc(0)" id="doc-btn-0" class="doc-btn border-2 border-blue-600 bg-blue-50/50 p-2.5 rounded-lg text-left transition-all">
+                <div class="text-xs font-bold text-slate-800">Financial Report</div>
+                <div class="text-[10px] text-slate-500">Revenue table & chart</div>
+              </button>
+              <button onclick="selectDoc(1)" id="doc-btn-1" class="doc-btn border border-slate-200 hover:border-slate-300 bg-white p-2.5 rounded-lg text-left transition-all">
+                <div class="text-xs font-bold text-slate-800">Research Paper</div>
+                <div class="text-[10px] text-slate-500">2-column & flowchart</div>
+              </button>
+              <button onclick="selectDoc(2)" id="doc-btn-2" class="doc-btn border border-slate-200 hover:border-slate-300 bg-white p-2.5 rounded-lg text-left transition-all">
+                <div class="text-xs font-bold text-slate-800">Medical Clinical</div>
+                <div class="text-[10px] text-slate-500">Demographic stats</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Query Input & Preset Selector -->
+          <div class="glass-card rounded-xl p-5 shadow-sm">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center justify-between">
+              <span>2. Enter Query for Visual Search</span>
+              <span class="text-xs text-slate-400">Click a sample to test</span>
+            </h3>
+            <div class="space-y-2 mb-3" id="sample-queries-list">
+              <!-- Dynamically populated sample query buttons -->
+            </div>
+
+            <div class="relative">
+              <input type="text" id="query-input" value="What was the total operating revenue and growth in Q3?" 
+                     class="w-full pl-3 pr-20 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm text-slate-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+              <button onclick="applyCustomQuery()" class="absolute right-1.5 top-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-md shadow-sm transition-all">
+                Compute
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Query Token Inspector -->
+          <div class="glass-card rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">
+                3. Query Token Multi-Vectors ($\vec{q}_i \in \mathbb{R}^{128}$)
+              </h3>
+              <span class="text-[11px] bg-blue-100 text-blue-800 font-semibold px-2 py-0.5 rounded">
+                Hover Token to View Spatial Heatmap
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">
+              Each query word is mapped to a 128-dimensional embedding. ColPali pairs it with the maximum document patch:
+            </p>
+
+            <!-- Token Chips Container -->
+            <div id="token-chips" class="flex flex-wrap gap-2 mb-4">
+              <!-- Rendered via JS -->
+            </div>
+
+            <!-- Active Token Score Card -->
+            <div id="active-token-info" class="p-3 rounded-lg bg-slate-100 border border-slate-200 text-xs space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-700">Selected Token: <span id="info-token-name" class="text-blue-700 text-sm">revenue</span></span>
+                <span class="font-mono text-xs font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded" id="info-token-score">MaxSim Cosine: +0.892</span>
+              </div>
+              <div class="text-slate-500 text-[11px]" id="info-token-details">
+                Best patch match at <strong>(X: 18, Y: 12)</strong> &bull; Corresponds to Table Row: "Total Automotive Revenue".
+              </div>
+            </div>
+
+            <!-- Total MaxSim Score Box -->
+            <div class="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between">
+              <div>
+                <div class="text-xs text-slate-500 font-medium">Accumulated Page Relevance Score:</div>
+                <div class="text-[11px] text-slate-400">$$\text{Score}(Q, D) = \sum_{i=1}^m \max_{j=1}^n (\vec{q}_i \cdot \vec{d}_j)$$</div>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-extrabold text-blue-700" id="total-score-val">24.68</div>
+                <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-wide"><i class="fa-solid fa-circle-check"></i> High Confidence (Rank #1)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Traditional OCR vs ColPali Reality Check -->
+          <div class="glass-card rounded-xl p-4 shadow-sm border-l-4 border-l-amber-500">
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-bold text-slate-700 uppercase">Analysis: How Traditional OCR Fails Here</span>
+              <button onclick="toggleOcrView()" id="ocr-toggle-btn" class="text-xs text-blue-600 hover:underline font-semibold">
+                Show OCR Text Breakdown
+              </button>
+            </div>
+            <div id="ocr-view-box" class="hidden text-[11px] font-mono bg-slate-900 text-emerald-400 p-3 rounded-md mt-2 max-h-32 overflow-y-auto">
+              [TRADITIONAL OCR EXTRACTION TRACE]<br/>
+              Table headers collapsed: "Q1 Q2 Q3 Revenue Total YoY"<br/>
+              Numbers unaligned: "18692 19625 554 23350 9% 40%"<br/>
+              Charts/Bar elements: [EMPTY: Standard OCR cannot extract visual layout]<br/>
+              Result: Dense Bi-encoder fails to find "automotive revenue in Q3".
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Document Visual Canvas & Heatmap Overlay -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="glass-card rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800 flex items-center">
+                  <i class="fa-solid fa-file-invoice text-blue-600 mr-2"></i>
+                  <span id="canvas-doc-title">Document Page (448 &times; 448 Patches)</span>
+                </h3>
+                <span class="text-xs text-slate-500">Visual Transformer Patches: 32 &times; 32 = 1,024 vectors (128-d each)</span>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-[11px] font-medium text-slate-600">Overlay:</span>
+                <button onclick="setHeatmapMode('single')" id="hm-mode-single" class="px-2 py-1 rounded text-xs font-bold bg-blue-600 text-white shadow-sm">
+                  Active Token
+                </button>
+                <button onclick="setHeatmapMode('full')" id="hm-mode-full" class="px-2 py-1 rounded text-xs font-semibold bg-slate-200 text-slate-700">
+                  Full Query Sum
+                </button>
+              </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full aspect-[4/5] bg-white rounded-lg border border-slate-300 shadow-inner overflow-hidden select-none" id="doc-container">
+              <!-- Rendered Document Elements (SVG Graphics) -->
+              <div id="doc-render-area" class="w-full h-full p-4 overflow-hidden">
+                <!-- SVG Doc Page injected by JS -->
+              </div>
+
+              <!-- Interactive Heatmap Canvas Overlay -->
+              <canvas id="heatmap-canvas" class="heatmap-canvas"></canvas>
+
+              <!-- Patch Grid Lines Overlay (Optional toggle) -->
+              <div id="patch-grid" class="absolute inset-0 grid grid-cols-16 grid-rows-16 pointer-events-none opacity-0 transition-opacity">
+              </div>
+            </div>
+
+            <!-- Heatmap Colorbar & Explanation -->
+            <div class="mt-4 flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-slate-700">Similarity Spectrum:</span>
+                <span class="font-mono text-[11px] text-blue-700">Low (0.0)</span>
+                <div class="w-28 h-3 rounded bg-gradient-to-r from-blue-900 via-indigo-500 via-emerald-400 to-amber-300 shadow-inner"></div>
+                <span class="font-mono text-[11px] text-amber-700">Peak (+1.0)</span>
+              </div>
+              <button onclick="toggleGridLines()" class="text-blue-600 font-semibold hover:underline text-xs">
+                <i class="fa-solid fa-border-all mr-1"></i>Toggle 32x32 Patch Grid
+              </button>
+            </div>
+          </div>
+
+          <!-- Token Compression (Hierarchical Token Pooling) Feature Box -->
+          <div class="glass-card rounded-xl p-4 shadow-sm bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-emerald-200">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  <i class="fa-solid fa-compress"></i>
+                </div>
+                <div>
+                  <h4 class="text-xs font-bold text-emerald-950 uppercase">Hierarchical Token Pooling Optimization</h4>
+                  <p class="text-[11px] text-emerald-800">Compresses redundant background/white margins by <strong>66.7%</strong> while retaining <strong>97.8%</strong> retrieval accuracy.</p>
+                </div>
+              </div>
+              <div class="text-right pl-3">
+                <span class="inline-block px-2 py-1 bg-emerald-600 text-white text-[11px] font-bold rounded-md">
+                  1,024 &rarr; 341 vectors
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 2: FULL OFFICIAL SYNOPSIS -->
+    <!-- ========================================== -->
+    <section id="tab-synopsis" class="tab-content hidden space-y-6">
+      
+      <div class="glass-card rounded-2xl p-6 sm:p-10 shadow-sm border border-slate-200">
+        
+        <!-- Synopsis Header Banner with Real College Logo -->
+        <div class="text-center pb-6 mb-6 border-b-2 border-slate-200 space-y-2">
+          <div class="flex items-center justify-center space-x-4 mb-2">
+            <img src="assets/trinity_logo.png" alt="Trinity Logo" class="h-16 w-auto object-contain">
+            <img src="assets/naac_logo.png" alt="NAAC Seal" class="h-14 w-auto object-contain">
+          </div>
+          <div class="text-xs font-bold text-amber-800 uppercase tracking-widest">KJ's Educational Institute</div>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">TRINITY ACADEMY OF ENGINEERING, PUNE</h2>
+          <div class="text-xs font-semibold text-slate-600">DEPARTMENT OF INFORMATION TECHNOLOGY</div>
+          <div class="text-xs text-slate-500">Sr.No. 25 & 27, Kondhwa-Saswad Road, Bopdev Ghat, Pune 411 048</div>
+          <div class="text-xs font-bold text-emerald-700 mt-1">SAVITRIBAI PHULE PUNE UNIVERSITY, PUNE &bull; ACADEMIC YEAR 2026–2027</div>
+
+          <div class="mt-4 pt-4 border-t border-slate-200">
+            <div class="text-xs font-bold text-blue-700 uppercase tracking-wide">A SYNOPSIS ON</div>
+            <h1 class="text-xl sm:text-3xl font-extrabold text-slate-900 mt-1">
+              “Visual-Document Retrieval and Question Answering Using ColPali”
+            </h1>
+            <div class="text-xs text-slate-500 mt-1">(Under Project: <em>“RAG for Intelligent Document Retrieval and Question Answering”</em>)</div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl mx-auto mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-left">
+            <div>
+              <span class="text-slate-500 block">Name of the Student:</span>
+              <strong class="text-slate-900 text-sm">Mr. Vijay Ramchandra Bhange</strong>
+              <div class="text-[11px] text-slate-500">Roll No: <strong>06</strong></div>
+            </div>
+            <div>
+              <span class="text-slate-500 block">Internal Guide:</span>
+              <strong class="text-slate-900 text-sm">Prof. Gulnaz Thakur</strong>
+              <div class="text-[11px] text-slate-500">Dept. of Information Technology</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Synopsis Body Content -->
+        <div class="space-y-6 text-xs sm:text-sm text-slate-700 leading-relaxed max-w-5xl mx-auto">
+          
+          <!-- Key Words -->
+          <div class="p-4 rounded-xl bg-blue-50/60 border border-blue-200">
+            <h4 class="font-bold text-blue-900 uppercase tracking-wider text-xs mb-2 flex items-center">
+              <i class="fa-solid fa-tags text-blue-600 mr-2"></i> Technical Key Words
+            </h4>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-2.5 py-1 bg-white text-blue-800 rounded-md font-semibold shadow-sm border border-blue-200">Visual-Document Retrieval</span>
+              <span class="px-2.5 py-1 bg-white text-blue-800 rounded-md font-semibold shadow-sm border border-blue-200">ColPali</span>
+              <span class="px-2.5 py-1 bg-white text-blue-800 rounded-md font-semibold shadow-sm border border-blue-200">Vision-Language Models</span>
+              <span class="px-2.5 py-1 bg-white text-blue-800 rounded-md font-semibold shadow-sm border border-blue-200">Retrieval-Augmented Generation (RAG)</span>
+              <span class="px-2.5 py-1 bg-white text-blue-800 rounded-md font-semibold shadow-sm border border-blue-200">Question Answering</span>
+            </div>
+          </div>
+
+          <!-- Relevant Objectives -->
+          <div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 border-b pb-1 text-blue-900 flex items-center">
+              <i class="fa-solid fa-bullseye text-blue-600 mr-2"></i> Relevant Objectives
+            </h3>
+            <ul class="list-disc pl-5 space-y-1.5 text-slate-700">
+              <li>To study visual-document retrieval using the ColPali model.</li>
+              <li>To understand the use of multi-vector embeddings for representing PDF pages visually.</li>
+              <li>To retrieve relevant document pages using query-to-page matching and late-interaction scoring.</li>
+              <li>To study VisRAG and ViDoRAG as supporting approaches for visual-document retrieval and question answering.</li>
+              <li>To evaluate retrieval relevance and the usefulness of visual evidence for answering questions involving tables, charts, diagrams, and complex layouts.</li>
+            </ul>
+          </div>
+
+          <!-- Introduction -->
+          <div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 border-b pb-1 text-blue-900 flex items-center">
+              <i class="fa-solid fa-book-open text-blue-600 mr-2"></i> Introduction
+            </h3>
+            <p class="mb-2">
+              Retrieval-Augmented Generation (RAG) is a technique that combines information retrieval with language generation to provide relevant and context-based answers to user queries. Traditional RAG systems mainly depend on extracting text from documents. However, PDF documents often contain important information in tables, charts, diagrams, images, and complex layouts. Text extraction may fail to preserve the complete meaning and structure of such information.
+            </p>
+            <p class="mb-2">
+              Visual-Document Retrieval is an approach that retrieves relevant document pages by analysing their visual content. ColPali is a vision-language-model-based retrieval method that represents PDF pages as images and creates visual embeddings for efficient retrieval. Instead of depending only on extracted text, it considers the visual information and layout of each page. It uses multi-vector representations and late-interaction scoring to match a user query with relevant document pages.
+            </p>
+            <p>
+              This seminar focuses on understanding ColPali and its role in visual-document retrieval and question answering. It also studies supporting approaches such as VisRAG and ViDoRAG, which explore the use of visual information and advanced retrieval workflows for multimodal documents. The retrieved pages can provide useful evidence to a separate language model for generating answers. This approach can help improve the retrieval of information from documents containing tables, charts, diagrams, and complex layouts.
+            </p>
+          </div>
+
+          <!-- Motivation -->
+          <div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 border-b pb-1 text-blue-900 flex items-center">
+              <i class="fa-solid fa-lightbulb text-amber-500 mr-2"></i> Motivation
+            </h3>
+            <p>
+              Traditional document retrieval systems may miss important information in tables, charts, diagrams, and complex PDF layouts. This motivates the study of ColPali, which uses visual representations to retrieve relevant document pages. The seminar also explores VisRAG and ViDoRAG to understand how visual retrieval can improve evidence retrieval for question answering.
+            </p>
+          </div>
+
+          <!-- Literature Review -->
+          <div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 border-b pb-1 text-blue-900 flex items-center">
+              <i class="fa-solid fa-newspaper text-blue-600 mr-2"></i> Literature Review
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900 block text-xs">1. RAG for Knowledge-Intensive NLP (Lewis et al., 2020)</strong>
+                <p class="text-[11px] text-slate-600 mt-1">Proposed the fundamental RAG framework combining neural retrieval with seq2seq generation for factual text generation.</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900 block text-xs">2. ColPali: Document Retrieval with VLMs (Faysse et al., 2024)</strong>
+                <p class="text-[11px] text-slate-600 mt-1">Introduced multi-vector page image embeddings with late-interaction matching, preserving tables, figures, and layouts.</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900 block text-xs">3. VisRAG: Vision-based RAG (Yu et al., 2024)</strong>
+                <p class="text-[11px] text-slate-600 mt-1">Uses document images directly in retrieval and answer generation, achieving a 20–40% performance gain over text pipelines.</p>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <strong class="text-slate-900 block text-xs">4. ViDoRAG: Dynamic Iterative Reasoning Agents (Wang et al., 2025)</strong>
+                <p class="text-[11px] text-slate-600 mt-1">A multi-agent framework combining coarse-to-fine multimodal retrieval with iterative exploration and reflection agents.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Architecture / Block Diagram (Direct User Image) -->
+          <div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 border-b pb-1 text-blue-900 flex items-center">
+              <i class="fa-solid fa-sitemap text-blue-600 mr-2"></i> System Architecture & Work Flow
+            </h3>
+            <p class="mb-3">
+              The system converts PDF pages into images and uses ColPali to generate visual embeddings. These embeddings are indexed for efficient retrieval. When a user submits a query, the system matches it with relevant document pages using late-interaction scoring. The retrieved pages are then provided to a separate language model to generate a context-based answer. VisRAG and ViDoRAG serve as supporting literature.
+            </p>
+            <div class="p-3 bg-white rounded-xl border border-slate-300 shadow-sm text-center">
+              <img src="assets/system_architecture.png" alt="Figure 1: System Architecture of Visual-Document Retrieval and Question Answering Using ColPali" class="max-w-full mx-auto rounded-lg shadow">
+              <div class="text-xs text-slate-500 font-semibold mt-2">Figure 1: System Architecture of Visual-Document Retrieval and Question Answering Using ColPali</div>
+            </div>
+          </div>
+
+          <!-- System Analysis (Direct User Image) -->
+          <div>
+            <h3 class="text-base font-bold text-slate-900 mb-2 border-b pb-1 text-blue-900 flex items-center">
+              <i class="fa-solid fa-diagram-project text-blue-600 mr-2"></i> System Analysis
+            </h3>
+            <div class="p-3 bg-white rounded-xl border border-slate-300 shadow-sm text-center mb-3">
+              <img src="assets/system_analysis.png" alt="Fig. 2: System Analysis" class="max-w-full mx-auto rounded-lg shadow">
+              <div class="text-xs text-slate-500 font-semibold mt-2">Fig. 2: System Analysis (Input Documents &rarr; Visual Preprocessing &rarr; ColPali Encoding &rarr; Indexing &rarr; Retrieval &rarr; Answer Generation)</div>
+            </div>
+          </div>
+
+          <!-- Problem Statement & Scope -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-200">
+              <h4 class="font-bold text-amber-900 uppercase text-xs mb-1">Problem Statement</h4>
+              <p class="text-xs text-slate-700">
+                Traditional text-based retrieval systems may fail to capture important visual information from PDF documents, such as tables, charts, diagrams, and complex layouts. Therefore, there is a need for a visual-document retrieval approach that can identify relevant document pages and provide useful evidence for accurate question answering.
+              </p>
+            </div>
+            <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200">
+              <h4 class="font-bold text-emerald-900 uppercase text-xs mb-1">Scope of Work</h4>
+              <ul class="list-disc pl-4 text-xs text-slate-700 space-y-1">
+                <li>To study visual-document retrieval using ColPali.</li>
+                <li>To retrieve relevant PDF pages using visual embeddings and late-interaction scoring.</li>
+                <li>To explore visual information from tables, charts, and complex layouts.</li>
+                <li>To study VisRAG and ViDoRAG as supporting approaches.</li>
+                <li>To understand how retrieved pages support context-based question answering.</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Hardware & Software Specifications -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+              <h4 class="font-bold text-slate-900 mb-2 flex items-center"><i class="fa-solid fa-server text-blue-600 mr-2"></i> Hardware Specifications</h4>
+              <ul class="space-y-1 text-slate-600">
+                <li><strong>Processor:</strong> Intel Core i3 or above</li>
+                <li><strong>RAM:</strong> Minimum 8 GB</li>
+                <li><strong>Storage:</strong> Minimum 256 GB HDD/SSD</li>
+                <li><strong>System Type:</strong> 64-bit computer</li>
+                <li><strong>Internet:</strong> Stable internet connection</li>
+              </ul>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+              <h4 class="font-bold text-slate-900 mb-2 flex items-center"><i class="fa-solid fa-code text-emerald-600 mr-2"></i> Software Specifications</h4>
+              <ul class="space-y-1 text-slate-600">
+                <li><strong>Operating System:</strong> Windows 10/11 or Linux</li>
+                <li><strong>Programming Language:</strong> Python</li>
+                <li><strong>Deep Learning Framework:</strong> PyTorch</li>
+                <li><strong>Model:</strong> ColPali Vision-Language Model</li>
+                <li><strong>Libraries:</strong> Transformers, Pillow, PEFT</li>
+                <li><strong>Supporting Approaches:</strong> VisRAG and ViDoRAG</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- References -->
+          <div class="p-4 rounded-xl bg-slate-100 border border-slate-200 text-xs font-mono">
+            <h4 class="font-bold text-slate-800 font-sans uppercase mb-2">References</h4>
+            <ol class="list-decimal pl-4 space-y-1 text-slate-600">
+              <li>M. Faysse et al., “ColPali: Efficient Document Retrieval with Vision Language Models,” arXiv:2407.01449, 2024.</li>
+              <li>S. Yu et al., “VisRAG: Vision-based Retrieval-augmented Generation on Multi-modality Documents,” arXiv:2410.10594, 2024.</li>
+              <li>Q. Wang et al., “ViDoRAG: Visual Document Retrieval-Augmented Generation via Dynamic Iterative Reasoning Agents,” arXiv:2502.18017, 2025.</li>
+              <li>P. Lewis et al., “Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks,” NeurIPS, vol. 33, pp. 9459–9474, 2020.</li>
+            </ol>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 3: SYSTEM ARCHITECTURE & WORKFLOW -->
+    <!-- ========================================== -->
+    <section id="tab-arch" class="tab-content hidden space-y-6">
+      
+      <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b pb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">System Architecture & Mathematical Pipeline</h2>
+            <p class="text-xs text-slate-500">Presented by <strong>Mr. Vijay Ramchandra Bhange</strong> (Roll No: 06) &bull; Department of Information Technology</p>
+          </div>
+          <span class="text-xs font-mono bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">PyTorch Tensor Core Engine</span>
+        </div>
+
+        <!-- Official Architecture Diagram from Docx -->
+        <div class="mb-8 p-4 rounded-xl bg-slate-50 border border-slate-200 text-center">
+          <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">Figure 1: Full System Architecture & Retrieval-to-Generation Pipeline</h4>
+          <img src="assets/system_architecture.png" alt="System Architecture Diagram" class="max-w-4xl w-full mx-auto rounded-lg shadow-md border border-slate-300">
+          <p class="text-xs text-slate-500 mt-2 italic">PDF page rendering &rarr; ColPali visual embeddings &rarr; Indexing &rarr; Late-interaction matching &rarr; Contextual answer generation.</p>
+        </div>
+
+        <!-- Mathematical Formulations Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Formulation 1: MaxSim -->
+          <div class="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center">
+              <i class="fa-solid fa-square-root-variable text-blue-600 mr-2"></i>
+              The MaxSim Operator Formulation
+            </h4>
+            <div class="p-3 bg-white rounded-lg border border-slate-200 text-center text-sm font-mono overflow-x-auto">
+              $$\text{MaxSim}(Q, D) = \sum_{i=1}^{m} \max_{j \in \{1, \dots, n\}} \left( \vec{E}_q^{(i)} \cdot \vec{E}_d^{(j)} \right)$$
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Where $Q$ has $m$ query tokens, $D$ has $n$ document image patches, and both $\vec{E}_q^{(i)}, \vec{E}_d^{(j)} \in \mathbb{R}^{128}$ are $L_2$-normalized so that their dot product is the cosine similarity.
+            </p>
+            <div class="p-2.5 bg-blue-50 rounded text-blue-900 text-xs font-mono">
+              # PyTorch Vectorized Contraction:<br/>
+              torch.einsum("bnd,csd->bcns", query, doc).amax(dim=3).sum(dim=2)
+            </div>
+          </div>
+
+          <!-- Formulation 2: InfoNCE Loss -->
+          <div class="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center">
+              <i class="fa-solid fa-chart-line text-blue-600 mr-2"></i>
+              ColBERT InfoNCE Contrastive Loss
+            </h4>
+            <div class="p-3 bg-white rounded-lg border border-slate-200 text-center text-sm font-mono overflow-x-auto">
+              $$\mathcal{L} = -\sum_{k=1}^B \log \frac{\exp\left(\frac{\text{MaxSim}(Q_k, D_k^+)}{\tau}\right)}{\sum_{j=1}^B \exp\left(\frac{\text{MaxSim}(Q_k, D_j)}{\tau}\right)}$$
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed">
+              Trained contrastively over a batch size of $B$. All other $(B-1)$ document pages in the batch act as in-batch negative passages. Temperature parameter $\tau = 0.02$.
+            </p>
+            <div class="p-2.5 bg-blue-50 rounded text-blue-900 text-xs font-mono">
+              # CrossEntropyLoss implementation:<br/>
+              CrossEntropyLoss()(scores / temperature, positive_indices)
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 4: 4 RAG COMPARISON (PROJECT SCOPE) -->
+    <!-- ========================================== -->
+    <section id="tab-rag-compare" class="tab-content hidden space-y-6">
+      
+      <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-4 border-b pb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Four RAG Approaches Under Investigation</h2>
+            <p class="text-xs text-slate-500">Comparative Analysis: ColPali (Visual RAG), CRAG (Corrective RAG), DPR (Dense Retrieval), RAPTOR (Hierarchical RAG)</p>
+          </div>
+          <span class="text-xs font-bold bg-amber-100 text-amber-800 px-3 py-1 rounded-md">Project Comparative Framework</span>
+        </div>
+
+        <!-- Slide 16 Image from PPT -->
+        <div class="mb-6 p-4 rounded-xl bg-white border border-slate-300 text-center shadow-sm">
+          <img src="assets/proposed_methodology.png" alt="Four Retrieval Approaches: ColPali, CRAG, DPR, RAPTOR" class="max-w-4xl w-full mx-auto rounded-lg">
+          <div class="text-xs text-slate-500 font-semibold mt-2">Proposed Methodology: Four Distinct Retrieval Paradigms for Intelligent Document Question Answering</div>
+        </div>
+
+        <!-- 4 Approaches Comparison Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          
+          <div class="p-4 rounded-xl bg-blue-50/70 border-2 border-blue-500">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</span>
+              <span class="text-[10px] font-bold bg-blue-200 text-blue-900 px-2 py-0.5 rounded">Vijay's Focus</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">ColPali (Visual RAG)</h4>
+            <p class="text-xs text-slate-600 mt-2">Retrieves whole document pages using visual patch embeddings (PaliGemma/Qwen) and late-interaction matching. Preserves tables, charts, and diagrams.</p>
+            <div class="mt-3 text-[11px] text-blue-800 font-semibold">Supporting: VisRAG, ViDoRAG</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-300">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-6 h-6 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">2</span>
+              <span class="text-[10px] font-bold bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded">Nisha's Focus</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">CRAG (Corrective RAG)</h4>
+            <p class="text-xs text-slate-600 mt-2">Evaluates retrieved evidence quality using a lightweight evaluator. When retrieval is weak, triggers corrective web search or query expansion.</p>
+            <div class="mt-3 text-[11px] text-emerald-800 font-semibold">Supporting: Self-RAG, ARES, RAGAS</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-purple-50/70 border border-purple-300">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-6 h-6 rounded-full bg-purple-600 text-white font-bold text-xs flex items-center justify-center">3</span>
+              <span class="text-[10px] font-bold bg-purple-200 text-purple-900 px-2 py-0.5 rounded">Kanak's Focus</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">DPR (Dense Retrieval)</h4>
+            <p class="text-xs text-slate-600 mt-2">Uses dual-encoders for questions and text passages with dense vector indexing (FAISS). Evaluates evidence support and detects unsupported claims.</p>
+            <div class="mt-3 text-[11px] text-purple-800 font-semibold">Supporting: RAGChecker, RAGTruth</div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-300">
+            <div class="flex items-center justify-between mb-2">
+              <span class="w-6 h-6 rounded-full bg-amber-600 text-white font-bold text-xs flex items-center justify-center">4</span>
+              <span class="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded">Aditi's Focus</span>
+            </div>
+            <h4 class="font-bold text-slate-900 text-sm">RAPTOR (Hierarchical)</h4>
+            <p class="text-xs text-slate-600 mt-2">Recursively clusters and summarizes document chunks into a multi-layered summary tree, enabling multi-level thematic and detail retrieval.</p>
+            <div class="mt-3 text-[11px] text-amber-800 font-semibold">Supporting: UDA, RAG Survey</div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 5: SEMINAR PRESENTATION SLIDE DECK -->
+    <!-- ========================================== -->
+    <section id="tab-slides" class="tab-content hidden space-y-6">
+      
+      <!-- Slide Viewer Card -->
+      <div class="glass-card rounded-2xl p-6 sm:p-10 shadow-lg border border-slate-200 relative">
+        
+        <!-- Slide Top Bar -->
+        <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 text-xs text-slate-500 font-medium">
+          <div class="flex items-center space-x-2">
+            <img src="assets/trinity_logo.png" alt="TAE" class="h-6 w-auto">
+            <span class="font-bold text-slate-800">Department of Information Technology &bull; Trinity Academy of Engineering</span>
+            <span class="text-slate-400">| Presenter: <strong>Vijay Bhange</strong></span>
+          </div>
+          <div class="flex items-center space-x-1 font-mono font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-md">
+            Slide <span id="current-slide-num">1</span> of <span id="total-slides-num">7</span>
+          </div>
+        </div>
+
+        <!-- Slide Canvas Container -->
+        <div id="slide-content-area" class="min-h-[380px] flex flex-col justify-center">
+          <!-- Dynamically Injected Slide HTML -->
+        </div>
+
+        <!-- Slide Controls Navigation -->
+        <div class="flex items-center justify-between pt-6 mt-6 border-t border-slate-200">
+          <button onclick="prevSlide()" id="prev-slide-btn" class="px-4 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-all flex items-center">
+            <i class="fa-solid fa-arrow-left mr-2"></i> Previous Slide
+          </button>
+          
+          <div class="flex space-x-1.5" id="slide-dots">
+            <!-- Injected dots -->
+          </div>
+
+          <button onclick="nextSlide()" id="next-slide-btn" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-md transition-all flex items-center">
+            Next Slide <i class="fa-solid fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 6: VIDORE BENCHMARK & PERFORMANCE -->
+    <!-- ========================================== -->
+    <section id="tab-benchmark" class="tab-content hidden space-y-6">
+      
+      <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900">Comparative Performance Analysis</h2>
+            <p class="text-xs text-slate-500">Evaluation on the Visual Document Retrieval (ViDoRe) Benchmark across complex financial tables, layouts, and diagrams.</p>
+          </div>
+          <div class="text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-lg flex items-center">
+            <i class="fa-solid fa-award text-emerald-600 mr-2"></i> Evaluation Study: Vijay Bhange, TAE IT Dept
+          </div>
+        </div>
+
+        <!-- Benchmark Chart Canvas -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 mb-6">
+          <canvas id="benchmarkChart" height="110"></canvas>
+        </div>
+
+        <!-- Key Insights Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left text-slate-700">
+            <thead class="bg-slate-100 text-slate-600 uppercase font-semibold">
+              <tr>
+                <th class="p-3">Model Architecture</th>
+                <th class="p-3">Retrieval Accuracy (nDCG@5)</th>
+                <th class="p-3">Methodology</th>
+                <th class="p-3">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              <tr class="bg-blue-50/50 font-semibold text-blue-900">
+                <td class="p-3">ColQwen2.5-v0.2</td>
+                <td class="p-3 font-mono font-bold text-emerald-600">89.4%</td>
+                <td class="p-3">Dynamic Resolution Qwen2.5-VL + Late Interaction</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">State-of-the-art</span></td>
+              </tr>
+              <tr class="font-semibold text-slate-900">
+                <td class="p-3">ColQwen2-v1.0</td>
+                <td class="p-3 font-mono font-bold text-emerald-600">89.3%</td>
+                <td class="p-3">Qwen2-VL-2B backbone + MaxSim</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">Top Tier</span></td>
+              </tr>
+              <tr>
+                <td class="p-3">ColPali-v1.3 (Base)</td>
+                <td class="p-3 font-mono font-bold text-blue-700">84.8%</td>
+                <td class="p-3">PaliGemma-3B mix 448 + MaxSim</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600">Core Benchmark</span></td>
+              </tr>
+              <tr class="text-slate-500">
+                <td class="p-3">BGE-M3 (OCR + Dense Text RAG)</td>
+                <td class="p-3 font-mono text-amber-700">65.2%</td>
+                <td class="p-3">Tesseract OCR &rarr; Chunking &rarr; Text Dense Embedding</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800">Traditional RAG</span></td>
+              </tr>
+              <tr class="text-slate-500">
+                <td class="p-3">BM25 (Lexical Search)</td>
+                <td class="p-3 font-mono text-red-600">59.8%</td>
+                <td class="p-3">Term frequency matching on raw extracted OCR text</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-red-100 text-red-800">Legacy Baseline</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 7: VIVA & FACULTY EVALUATION -->
+    <!-- ========================================== -->
+    <section id="tab-viva" class="tab-content hidden space-y-4">
+      
+      <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-2xl font-bold text-slate-900">Viva Examination & Faculty Q&A Guide</h2>
+          <span class="text-xs bg-indigo-100 text-indigo-800 font-bold px-2.5 py-1 rounded-md">Evaluation Reference</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-6">Technical defense questions and answers prepared for the seminar evaluation panel at Trinity Academy of Engineering, Department of Information Technology.</p>
+
+        <div class="space-y-3" id="viva-questions-list">
+          <!-- Accordion Items injected by JS -->
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- TAB 8: STUDENT PROFILE & GUIDE -->
+    <!-- ========================================== -->
+    <section id="tab-profile" class="tab-content hidden space-y-6">
+      
+      <div class="glass-card rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+          <div class="flex items-center space-x-4">
+            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-amber-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-blue-500/20">
+              VB
+            </div>
+            <div>
+              <h2 class="text-2xl font-extrabold text-slate-900">Mr. Vijay Ramchandra Bhange</h2>
+              <div class="text-sm font-semibold text-emerald-700">Roll No: 06 &bull; Department of Information Technology</div>
+              <div class="text-xs text-slate-500 font-medium">Trinity Academy of Engineering, Pune &bull; SPPU</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <a href="https://www.linkedin.com/in/vijaybhange" target="_blank" rel="noopener noreferrer" 
+               class="inline-flex items-center space-x-2 px-4 py-2 bg-[#0077b5] hover:bg-[#005f93] text-white rounded-xl text-xs font-bold shadow-md transition-all">
+              <i class="fa-brands fa-linkedin text-base"></i>
+              <span>Connect on LinkedIn</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="text-xs font-bold uppercase text-slate-500">Project Title</div>
+            <div class="text-sm font-bold text-slate-900">Visual-Document Retrieval and Question Answering Using ColPali</div>
+            <div class="text-xs text-slate-600">Focus: Multi-vector visual representations and late-interaction scoring for PDF documents with tables & charts.</div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="text-xs font-bold uppercase text-slate-500">Internal Guide</div>
+            <div class="text-sm font-bold text-slate-900">Prof. Gulnaz Thakur</div>
+            <div class="text-xs text-slate-600">Department of Information Technology, Trinity Academy of Engineering, Pune.</div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="text-xs font-bold uppercase text-slate-500">Academic Details</div>
+            <div class="text-sm font-bold text-slate-900">Bachelor of Engineering (B.E. IT)</div>
+            <div class="text-xs text-slate-600">Academic Year: 2026–2027 &bull; Savitribai Phule Pune University (SPPU).</div>
+          </div>
+        </div>
+
+        <!-- Seminar Team Cards -->
+        <div class="mt-6 pt-6 border-t border-slate-200">
+          <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Project Team Members & Focus Areas</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <div class="p-3 bg-blue-50 border-2 border-blue-500 rounded-xl">
+              <div class="text-xs font-bold text-blue-900">1. Vijay Bhange (06)</div>
+              <div class="text-[11px] text-blue-700 font-semibold mt-1">ColPali Visual Retrieval</div>
+              <div class="text-[10px] text-slate-500">Vision-Language Embeddings</div>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div class="text-xs font-bold text-slate-900">2. Nisha Nale</div>
+              <div class="text-[11px] text-emerald-700 font-semibold mt-1">CRAG (Corrective RAG)</div>
+              <div class="text-[10px] text-slate-500">Retrieval Quality Evaluation</div>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div class="text-xs font-bold text-slate-900">3. Kanak Gupta</div>
+              <div class="text-[11px] text-purple-700 font-semibold mt-1">DPR (Dense Retrieval)</div>
+              <div class="text-[10px] text-slate-500">Dual-Encoder Evidence QA</div>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+              <div class="text-xs font-bold text-slate-900">4. Aditi Guddeti</div>
+              <div class="text-[11px] text-amber-700 font-semibold mt-1">RAPTOR (Hierarchical)</div>
+              <div class="text-[10px] text-slate-500">Recursive Summary Tree</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Comprehensive Institutional Footer with Clickable LinkedIn Link -->
+  <footer class="bg-slate-900 text-white border-t border-slate-800 mt-12 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-800">
+        
+        <!-- Left: Logo & College Information -->
+        <div class="flex items-center space-x-4">
+          <img src="assets/trinity_logo.png" alt="Trinity Academy of Engineering" class="h-14 w-auto bg-white/5 p-1 rounded-md">
+          <div>
+            <div class="text-sm font-extrabold text-amber-400 uppercase tracking-wide">
+              KJ's Educational Institute &bull; Trinity Academy of Engineering, Pune
+            </div>
+            <div class="text-xs text-slate-300 font-medium">
+              Department of Information Technology &bull; Savitribai Phule Pune University
+            </div>
+            <div class="text-[11px] text-slate-500 mt-0.5">
+              Sr.No. 25 & 27, Kondhwa-Saswad Road, Bopdev Ghat, Pune 411 048
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Clickable LinkedIn Badge -->
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+          <a href="https://www.linkedin.com/in/vijaybhange" target="_blank" rel="noopener noreferrer" 
+             class="inline-flex items-center space-x-2.5 px-4 py-2.5 rounded-xl bg-[#0077b5] hover:bg-[#005f93] text-white font-bold text-xs shadow-lg transition-all hover:scale-105 border border-blue-400/30">
+            <i class="fa-brands fa-linkedin text-lg"></i>
+            <span>Connect on LinkedIn: /in/vijaybhange</span>
+            <i class="fa-solid fa-arrow-up-right-from-square text-xs ml-1"></i>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- Bottom Credits -->
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+        <div>
+          Seminar Project Presented by: <strong class="text-white">Mr. Vijay Ramchandra Bhange</strong> (Roll No: 06)
+          &bull; Guided by: <strong class="text-amber-300">Prof. Gulnaz Thakur</strong>
+        </div>
+        <div>
+          Academic Year 2026–2027 &bull; Department of Information Technology &bull; TAE Pune
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // --- Data Definitions ---
+    const documents = [
+      {
+        id: 0,
+        title: "Tesla Q3 2023 Financial Summary & Delivery Growth",
+        queries: [
+          "What was the total operating revenue and growth in Q3?",
+          "Show automotive regulatory credits in the financial table",
+          "Vehicle deliveries bar chart comparing 2022 vs 2023"
+        ],
+        svgContent: `
+          <svg viewBox="0 0 448 560" class="w-full h-full text-slate-800">
+            <!-- Background Sheet -->
+            <rect width="448" height="560" fill="#ffffff" rx="4"/>
+            
+            <!-- Header -->
+            <rect x="24" y="24" width="40" height="12" fill="#e11d48" rx="2"/>
+            <text x="70" y="34" font-size="12" font-weight="bold" fill="#0f172a">TESLA, INC. &bull; Q3 2023 UPDATE</text>
+            <line x1="24" y1="44" x2="424" y2="44" stroke="#e2e8f0" stroke-width="1.5"/>
+
+            <!-- Key Metric Cards -->
+            <rect x="24" y="56" width="124" height="48" fill="#f8fafc" stroke="#cbd5e1" rx="4"/>
+            <text x="32" y="72" font-size="9" fill="#64748b">Total Revenues</text>
+            <text x="32" y="92" font-size="14" font-weight="bold" fill="#0f172a">$23,350M</text>
+
+            <rect x="162" y="56" width="124" height="48" fill="#f8fafc" stroke="#cbd5e1" rx="4"/>
+            <text x="170" y="72" font-size="9" fill="#64748b">Operating Income</text>
+            <text x="170" y="92" font-size="14" font-weight="bold" fill="#0f172a">$1,764M</text>
+
+            <rect x="300" y="56" width="124" height="48" fill="#f8fafc" stroke="#cbd5e1" rx="4"/>
+            <text x="308" y="72" font-size="9" fill="#64748b">Operating Margin</text>
+            <text x="308" y="92" font-size="14" font-weight="bold" fill="#0f172a">7.6%</text>
+
+            <!-- Table Section (Revenue breakdown) -->
+            <text x="24" y="128" font-size="11" font-weight="bold" fill="#1e293b">Operational Summary Statement (in $ millions)</text>
+            <rect x="24" y="136" width="400" height="144" fill="#ffffff" stroke="#e2e8f0" rx="4"/>
+            
+            <!-- Table Header -->
+            <rect x="24" y="136" width="400" height="22" fill="#f1f5f9"/>
+            <text x="32" y="151" font-size="9" font-weight="bold" fill="#475569">Line Item</text>
+            <text x="230" y="151" font-size="9" font-weight="bold" fill="#475569">Q3-2022</text>
+            <text x="300" y="151" font-size="9" font-weight="bold" fill="#475569">Q3-2023</text>
+            <text x="370" y="151" font-size="9" font-weight="bold" fill="#475569">YoY Change</text>
+
+            <!-- Rows -->
+            <text x="32" y="174" font-size="9" fill="#1e293b">Total automotive revenues</text>
+            <text x="230" y="174" font-size="9" fill="#1e293b">$18,692</text>
+            <text x="300" y="174" font-size="9" font-weight="bold" fill="#2563eb">$19,625</text>
+            <text x="370" y="174" font-size="9" fill="#16a34a">+5%</text>
+            <line x1="24" y1="184" x2="424" y2="184" stroke="#f1f5f9"/>
+
+            <text x="32" y="200" font-size="9" fill="#1e293b">Automotive regulatory credits</text>
+            <text x="230" y="200" font-size="9" fill="#1e293b">$286</text>
+            <text x="300" y="200" font-size="9" fill="#1e293b">$554</text>
+            <text x="370" y="200" font-size="9" fill="#16a34a">+94%</text>
+            <line x1="24" y1="210" x2="424" y2="210" stroke="#f1f5f9"/>
+
+            <text x="32" y="226" font-size="9" fill="#1e293b">Energy storage & services</text>
+            <text x="230" y="226" font-size="9" fill="#1e293b">$1,117</text>
+            <text x="300" y="226" font-size="9" fill="#1e293b">$1,559</text>
+            <text x="370" y="226" font-size="9" fill="#16a34a">+40%</text>
+            <line x1="24" y1="236" x2="424" y2="236" stroke="#f1f5f9"/>
+
+            <text x="32" y="252" font-size="9" font-weight="bold" fill="#0f172a">Total Revenues</text>
+            <text x="230" y="252" font-size="9" font-weight="bold" fill="#0f172a">$21,454</text>
+            <text x="300" y="252" font-size="9" font-weight="bold" fill="#2563eb">$23,350</text>
+            <text x="370" y="252" font-size="9" font-weight="bold" fill="#16a34a">+9%</text>
+
+            <!-- Chart Section (Deliveries bar chart) -->
+            <text x="24" y="306" font-size="11" font-weight="bold" fill="#1e293b">Vehicle Deliveries (Units in Thousands)</text>
+            <rect x="24" y="316" width="400" height="190" fill="#f8fafc" stroke="#e2e8f0" rx="4"/>
+
+            <!-- Y Axis Marks -->
+            <line x1="60" y1="336" x2="400" y2="336" stroke="#e2e8f0" stroke-dasharray="2,2"/>
+            <text x="34" y="339" font-size="8" fill="#94a3b8">500k</text>
+
+            <line x1="60" y1="380" x2="400" y2="380" stroke="#e2e8f0" stroke-dasharray="2,2"/>
+            <text x="34" y="383" font-size="8" fill="#94a3b8">350k</text>
+
+            <line x1="60" y1="424" x2="400" y2="424" stroke="#e2e8f0" stroke-dasharray="2,2"/>
+            <text x="34" y="427" font-size="8" fill="#94a3b8">200k</text>
+
+            <line x1="60" y1="468" x2="400" y2="468" stroke="#cbd5e1" stroke-width="1.5"/>
+
+            <!-- Bars -->
+            <!-- Q3-22 -->
+            <rect x="110" y="382" width="44" height="86" fill="#94a3b8" rx="2"/>
+            <text x="118" y="374" font-size="9" font-weight="bold" fill="#475569">343.8k</text>
+            <text x="114" y="482" font-size="9" fill="#64748b">Q3 2022</text>
+
+            <!-- Q3-23 -->
+            <rect x="250" y="354" width="44" height="114" fill="#2563eb" rx="2"/>
+            <text x="258" y="346" font-size="9" font-weight="bold" fill="#1d4ed8">435.1k</text>
+            <text x="254" y="482" font-size="9" fill="#1d4ed8" font-weight="bold">Q3 2023</text>
+
+            <!-- Legend -->
+            <rect x="150" y="520" width="8" height="8" fill="#94a3b8"/>
+            <text x="164" y="527" font-size="9" fill="#64748b">2022 Actuals</text>
+            <rect x="240" y="520" width="8" height="8" fill="#2563eb"/>
+            <text x="254" y="527" font-size="9" fill="#1e293b" font-weight="bold">2023 Deliveries (+27%)</text>
+          </svg>
+        `,
+        tokenRegions: {
+          "revenue": { x: 0.68, y: 0.42, r: 0.16, desc: "Automotive Revenue Row in Table", score: 0.94 },
+          "operating": { x: 0.45, y: 0.15, r: 0.15, desc: "Operating Income & Margin Card", score: 0.88 },
+          "total": { x: 0.20, y: 0.15, r: 0.14, desc: "Total Revenues Metric Badge", score: 0.85 },
+          "q3": { x: 0.68, y: 0.38, r: 0.18, desc: "Q3 2023 Column Header", score: 0.91 },
+          "growth": { x: 0.86, y: 0.40, r: 0.15, desc: "YoY Percentage Growth Column", score: 0.89 },
+          "automotive": { x: 0.25, y: 0.35, r: 0.18, desc: "Automotive Line Items", score: 0.92 },
+          "credits": { x: 0.45, y: 0.38, r: 0.16, desc: "Regulatory Credits Table Row", score: 0.95 },
+          "deliveries": { x: 0.58, y: 0.72, r: 0.22, desc: "Vehicle Deliveries Bar Chart", score: 0.96 },
+          "chart": { x: 0.55, y: 0.75, r: 0.25, desc: "Deliveries Bar Chart Geometry", score: 0.93 },
+          "bar": { x: 0.60, y: 0.73, r: 0.20, desc: "Q3 2023 Blue Delivery Bar", score: 0.91 },
+          "2023": { x: 0.65, y: 0.75, r: 0.18, desc: "2023 Delivery Metric", score: 0.89 },
+        }
+      },
+      {
+        id: 1,
+        title: "Deep Learning Attention Mechanism Survey",
+        queries: [
+          "Show the multi-head self-attention projection flowchart",
+          "What is the softmax scaled dot-product attention equation?",
+          "Compare memory complexity in transformer layers"
+        ],
+        svgContent: `
+          <svg viewBox="0 0 448 560" class="w-full h-full text-slate-800">
+            <rect width="448" height="560" fill="#ffffff" rx="4"/>
+            <!-- Title in 2-column paper -->
+            <text x="24" y="32" font-size="12" font-weight="bold" fill="#0f172a">Attention Is All You Need: Architectural Advances</text>
+            <text x="24" y="46" font-size="8" fill="#64748b">A. Vaswani, N. Shazeer, J. Uszkoreit &bull; Computing Research Repository (CoRR)</text>
+            <line x1="24" y1="54" x2="424" y2="54" stroke="#e2e8f0" stroke-width="1.5"/>
+
+            <!-- Left Column: Flowchart Diagram -->
+            <rect x="24" y="68" width="180" height="260" fill="#f8fafc" stroke="#cbd5e1" rx="4"/>
+            <text x="36" y="86" font-size="10" font-weight="bold" fill="#1e293b">Scaled Dot-Product Attention</text>
+            
+            <!-- Flowchart Blocks -->
+            <rect x="74" y="104" width="80" height="24" fill="#dbeafe" stroke="#3b82f6" rx="3"/>
+            <text x="96" y="120" font-size="9" font-weight="bold" fill="#1e40af">MatMul</text>
+
+            <line x1="114" y1="128" x2="114" y2="142" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="74" y="142" width="80" height="24" fill="#fef3c7" stroke="#f59e0b" rx="3"/>
+            <text x="100" y="158" font-size="9" font-weight="bold" fill="#92400e">Scale</text>
+
+            <line x1="114" y1="166" x2="114" y2="180" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="74" y="180" width="80" height="24" fill="#fee2e2" stroke="#ef4444" rx="3"/>
+            <text x="92" y="196" font-size="9" font-weight="bold" fill="#991b1b">Mask (opt)</text>
+
+            <line x1="114" y1="204" x2="114" y2="218" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="74" y="218" width="80" height="24" fill="#dcfce7" stroke="#22c55e" rx="3"/>
+            <text x="90" y="234" font-size="9" font-weight="bold" fill="#166534">Softmax</text>
+
+            <line x1="114" y1="242" x2="114" y2="256" stroke="#3b82f6" stroke-width="1.5"/>
+            <rect x="74" y="256" width="80" height="24" fill="#dbeafe" stroke="#3b82f6" rx="3"/>
+            <text x="96" y="272" font-size="9" font-weight="bold" fill="#1e40af">MatMul</text>
+
+            <!-- Inputs Q, K, V -->
+            <text x="44" y="296" font-size="9" font-weight="bold" fill="#2563eb">Query (Q)</text>
+            <text x="100" y="296" font-size="9" font-weight="bold" fill="#d97706">Key (K)</text>
+            <text x="146" y="296" font-size="9" font-weight="bold" fill="#16a34a">Value (V)</text>
+
+            <!-- Right Column: Abstract & Equations -->
+            <text x="218" y="80" font-size="10" font-weight="bold" fill="#0f172a">3.2 Attention Formulation</text>
+            <rect x="218" y="92" width="206" height="56" fill="#f1f5f9" stroke="#e2e8f0" rx="4"/>
+            <text x="226" y="112" font-size="9" font-style="italic" fill="#334155">Attention(Q, K, V) =</text>
+            <text x="236" y="132" font-size="10" font-weight="bold" fill="#1e3a8a">softmax( Q K^T / &radic;d_k ) V</text>
+
+            <!-- Section 3.3 Multihead text -->
+            <text x="218" y="172" font-size="9" fill="#334155">Multi-head attention allows the model to</text>
+            <text x="218" y="186" font-size="9" fill="#334155">jointly attend to information at different</text>
+            <text x="218" y="200" font-size="9" fill="#334155">positions from different subspaces.</text>
+
+            <rect x="218" y="214" width="206" height="42" fill="#eff6ff" stroke="#bfdbfe" rx="4"/>
+            <text x="226" y="230" font-size="8" font-weight="bold" fill="#1e40af">MultiHead(Q,K,V) = Concat(head_1...head_h)W^O</text>
+            <text x="226" y="244" font-size="8" fill="#1d4ed8">where head_i = Attention(Q W_i^Q, K W_i^K, V W_i^V)</text>
+
+            <!-- Bottom Table: Complexity -->
+            <text x="24" y="356" font-size="10" font-weight="bold" fill="#0f172a">Table 1: Maximum Path Lengths and Computational Complexity</text>
+            <rect x="24" y="366" width="400" height="150" fill="#ffffff" stroke="#cbd5e1" rx="4"/>
+            
+            <rect x="24" y="366" width="400" height="24" fill="#f8fafc"/>
+            <text x="36" y="382" font-size="9" font-weight="bold" fill="#475569">Layer Type</text>
+            <text x="160" y="382" font-size="9" font-weight="bold" fill="#475569">Complexity per Layer</text>
+            <text x="300" y="382" font-size="9" font-weight="bold" fill="#475569">Sequential Ops</text>
+
+            <text x="36" y="412" font-size="9" fill="#1e293b">Self-Attention</text>
+            <text x="160" y="412" font-size="9" font-weight="bold" fill="#2563eb">O(n^2 &bull; d)</text>
+            <text x="300" y="412" font-size="9" fill="#16a34a">O(1)</text>
+            <line x1="24" y1="422" x2="424" y2="422" stroke="#f1f5f9"/>
+
+            <text x="36" y="444" font-size="9" fill="#1e293b">Recurrent (LSTM / RNN)</text>
+            <text x="160" y="444" font-size="9" fill="#1e293b">O(n &bull; d^2)</text>
+            <text x="300" y="444" font-size="9" fill="#dc2626">O(n)</text>
+            <line x1="24" y1="454" x2="424" y2="454" stroke="#f1f5f9"/>
+
+            <text x="36" y="476" font-size="9" fill="#1e293b">Convolutional</text>
+            <text x="160" y="476" font-size="9" fill="#1e293b">O(k &bull; n &bull; d^2)</text>
+            <text x="300" y="476" font-size="9" fill="#16a34a">O(1)</text>
+          </svg>
+        `,
+        tokenRegions: {
+          "flowchart": { x: 0.25, y: 0.35, r: 0.22, desc: "Scaled Dot-Product Architecture Diagram", score: 0.96 },
+          "attention": { x: 0.25, y: 0.30, r: 0.24, desc: "Attention Block Diagram", score: 0.94 },
+          "multi-head": { x: 0.70, y: 0.40, r: 0.18, desc: "MultiHead Equation & Projection Formula", score: 0.92 },
+          "softmax": { x: 0.25, y: 0.42, r: 0.14, desc: "Softmax Green Block in Diagram", score: 0.95 },
+          "equation": { x: 0.70, y: 0.22, r: 0.16, desc: "Scaled Dot-Product Formula Box", score: 0.93 },
+          "complexity": { x: 0.50, y: 0.75, r: 0.22, desc: "Table 1: Complexity per Layer", score: 0.94 },
+          "table": { x: 0.50, y: 0.72, r: 0.24, desc: "Computational Complexity Table", score: 0.95 },
+          "matmul": { x: 0.25, y: 0.24, r: 0.12, desc: "MatMul Blue Block", score: 0.91 }
+        }
+      },
+      {
+        id: 2,
+        title: "Clinical Trial Patient Demographics & Cohort Analysis",
+        queries: [
+          "What is the median age and gender breakdown of cohort B?",
+          "Show adverse event percentage in demographic distribution",
+          "Summary statistics table of baseline clinical characteristics"
+        ],
+        svgContent: `
+          <svg viewBox="0 0 448 560" class="w-full h-full text-slate-800">
+            <rect width="448" height="560" fill="#ffffff" rx="4"/>
+            <text x="24" y="32" font-size="12" font-weight="bold" fill="#0f172a">CLINICAL PROTOCOL STUDY &bull; PHASE III</text>
+            <text x="24" y="46" font-size="8" fill="#64748b">Patient Demographics and Safety Evaluation (N=1,240)</text>
+            <line x1="24" y1="54" x2="424" y2="54" stroke="#e2e8f0" stroke-width="1.5"/>
+
+            <!-- Demographic Table -->
+            <text x="24" y="78" font-size="10" font-weight="bold" fill="#1e293b">Table 2: Baseline Patient Characteristics</text>
+            <rect x="24" y="88" width="400" height="190" fill="#ffffff" stroke="#cbd5e1" rx="4"/>
+
+            <rect x="24" y="88" width="400" height="22" fill="#f1f5f9"/>
+            <text x="36" y="103" font-size="9" font-weight="bold" fill="#475569">Characteristic</text>
+            <text x="210" y="103" font-size="9" font-weight="bold" fill="#475569">Cohort A (Control)</text>
+            <text x="320" y="103" font-size="9" font-weight="bold" fill="#475569">Cohort B (Active)</text>
+
+            <text x="36" y="126" font-size="9" fill="#1e293b">Total Patients (n)</text>
+            <text x="210" y="126" font-size="9" fill="#1e293b">620 (50%)</text>
+            <text x="320" y="126" font-size="9" fill="#1e293b">620 (50%)</text>
+            <line x1="24" y1="136" x2="424" y2="136" stroke="#f1f5f9"/>
+
+            <text x="36" y="152" font-size="9" font-weight="bold" fill="#1e293b">Median Age (Years)</text>
+            <text x="210" y="152" font-size="9" fill="#1e293b">58.4 (IQR 48-67)</text>
+            <text x="320" y="152" font-size="9" font-weight="bold" fill="#2563eb">57.9 (IQR 47-66)</text>
+            <line x1="24" y1="162" x2="424" y2="162" stroke="#f1f5f9"/>
+
+            <text x="36" y="178" font-size="9" fill="#1e293b">Female (%)</text>
+            <text x="210" y="178" font-size="9" fill="#1e293b">312 (50.3%)</text>
+            <text x="320" y="178" font-size="9" font-weight="bold" fill="#2563eb">318 (51.3%)</text>
+            <line x1="24" y1="188" x2="424" y2="188" stroke="#f1f5f9"/>
+
+            <text x="36" y="204" font-size="9" fill="#1e293b">Male (%)</text>
+            <text x="210" y="204" font-size="9" fill="#1e293b">308 (49.7%)</text>
+            <text x="320" y="204" font-size="9" fill="#1e293b">302 (48.7%)</text>
+            <line x1="24" y1="214" x2="424" y2="214" stroke="#f1f5f9"/>
+
+            <text x="36" y="230" font-size="9" fill="#1e293b">Adverse Events (Grade 1-2)</text>
+            <text x="210" y="230" font-size="9" fill="#dc2626">18.2%</text>
+            <text x="320" y="230" font-size="9" font-weight="bold" fill="#16a34a">7.4%</text>
+
+            <!-- Bottom Graphic: Pie Distribution -->
+            <text x="24" y="316" font-size="10" font-weight="bold" fill="#1e293b">Demographic Distribution Pie Chart</text>
+            <rect x="24" y="326" width="400" height="190" fill="#f8fafc" stroke="#cbd5e1" rx="4"/>
+
+            <!-- Simple SVG Pie Chart -->
+            <circle cx="140" cy="420" r="60" fill="#e2e8f0"/>
+            <path d="M 140 420 L 140 360 A 60 60 0 1 1 80 420 Z" fill="#2563eb"/>
+            <path d="M 140 420 L 80 420 A 60 60 0 0 1 140 360 Z" fill="#ec4899"/>
+
+            <text x="240" y="400" font-size="10" font-weight="bold" fill="#2563eb">&bull; Cohort B Active (51.3% Female)</text>
+            <text x="240" y="424" font-size="10" font-weight="bold" fill="#ec4899">&bull; Male Cohort (48.7%)</text>
+            <text x="240" y="448" font-size="9" fill="#64748b">Significance p-value = 0.0034</text>
+          </svg>
+        `,
+        tokenRegions: {
+          "age": { x: 0.75, y: 0.28, r: 0.16, desc: "Median Age Row: 57.9 Years", score: 0.95 },
+          "gender": { x: 0.75, y: 0.34, r: 0.18, desc: "Female / Male Breakdown Rows", score: 0.94 },
+          "cohort": { x: 0.80, y: 0.24, r: 0.20, desc: "Cohort B Active Header & Data", score: 0.93 },
+          "adverse": { x: 0.75, y: 0.42, r: 0.18, desc: "Adverse Events Percentage: 7.4%", score: 0.96 },
+          "distribution": { x: 0.35, y: 0.75, r: 0.24, desc: "Demographic Distribution Pie Chart", score: 0.93 },
+          "table": { x: 0.50, y: 0.30, r: 0.25, desc: "Table 2: Baseline Patient Characteristics", score: 0.92 }
+        }
+      }
+    ];
+
+    let currentDocIdx = 0;
+    let currentTokens = [];
+    let selectedToken = "revenue";
+    let heatmapMode = "single";
+    let showGrid = false;
+
+    // --- Switch Navigation Tabs ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => {
+        el.classList.remove('text-blue-700', 'bg-blue-50');
+        el.classList.add('text-slate-600');
+      });
+      
+      const targetTab = document.getElementById('tab-' + tabId);
+      const targetNav = document.getElementById('nav-' + tabId);
+      if (targetTab) targetTab.classList.remove('hidden');
+      if (targetNav) {
+        targetNav.classList.add('text-blue-700', 'bg-blue-50');
+        targetNav.classList.remove('text-slate-600');
+      }
+
+      if (tabId === 'benchmark' && !window.chartInitialized) {
+        initBenchmarkChart();
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- Document Selector ---
+    function selectDoc(idx) {
+      currentDocIdx = idx;
+      document.querySelectorAll('.doc-btn').forEach((btn, i) => {
+        if (i === idx) {
+          btn.classList.add('border-blue-600', 'bg-blue-50/50');
+          btn.classList.remove('border-slate-200', 'bg-white');
+        } else {
+          btn.classList.remove('border-blue-600', 'bg-blue-50/50');
+          btn.classList.add('border-slate-200', 'bg-white');
+        }
+      });
+
+      const doc = documents[idx];
+      document.getElementById('canvas-doc-title').innerText = doc.title;
+      document.getElementById('doc-render-area').innerHTML = doc.svgContent;
+
+      const sampleList = document.getElementById('sample-queries-list');
+      sampleList.innerHTML = '';
+      doc.queries.forEach((q, qIdx) => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left text-xs p-2 rounded-md bg-slate-50 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 transition-colors flex items-center justify-between";
+        btn.innerHTML = `<span><i class="fa-solid fa-magnifying-glass text-[10px] mr-1.5 text-slate-400"></i>${q}</span><i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>`;
+        btn.onclick = () => {
+          document.getElementById('query-input').value = q;
+          tokenizeQuery(q);
+        };
+        sampleList.appendChild(btn);
+      });
+
+      document.getElementById('query-input').value = doc.queries[0];
+      tokenizeQuery(doc.queries[0]);
+    }
+
+    // --- Query Tokenizer & Multi-vector Simulation ---
+    function tokenizeQuery(text) {
+      const clean = text.replace(/[?,.!]/g, '');
+      const words = clean.split(/\s+/).filter(w => w.length > 0);
+      currentTokens = words;
+
+      const chipsContainer = document.getElementById('token-chips');
+      chipsContainer.innerHTML = '';
+
+      const doc = documents[currentDocIdx];
+      let firstMatchedToken = null;
+
+      words.forEach((token, i) => {
+        const lower = token.toLowerCase();
+        const hasMatch = doc.tokenRegions[lower] !== undefined;
+        if (!firstMatchedToken && hasMatch) firstMatchedToken = lower;
+
+        const chip = document.createElement('button');
+        chip.className = `token-chip text-xs px-2.5 py-1 rounded-md font-mono font-medium border ${hasMatch ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`;
+        chip.innerText = token;
+        chip.onclick = () => selectToken(lower, token);
+        chip.onmouseenter = () => {
+          if (heatmapMode === 'single') drawHeatmapForToken(lower);
+        };
+        chipsContainer.appendChild(chip);
+      });
+
+      const initialToken = firstMatchedToken || (words[0] ? words[0].toLowerCase() : 'revenue');
+      selectToken(initialToken, initialToken);
+    }
+
+    function selectToken(lower, display) {
+      selectedToken = lower;
+      const doc = documents[currentDocIdx];
+      const match = doc.tokenRegions[lower];
+
+      document.getElementById('info-token-name').innerText = display;
+      if (match) {
+        document.getElementById('info-token-score').innerText = `MaxSim Cosine: +${match.score.toFixed(3)}`;
+        document.getElementById('info-token-details').innerHTML = `Best patch match at <strong>(X: ${Math.round(match.x*32)}, Y: ${Math.round(match.y*32)})</strong> &bull; ${match.desc}`;
+      } else {
+        document.getElementById('info-token-score').innerText = `MaxSim Cosine: +0.210`;
+        document.getElementById('info-token-details').innerHTML = `Syntactic token (general language prior, diffuse background match).`;
+      }
+
+      drawHeatmap();
+    }
+
+    function applyCustomQuery() {
+      const val = document.getElementById('query-input').value;
+      if (val) tokenizeQuery(val);
+    }
+
+    // --- Heatmap Drawing Engine ---
+    function drawHeatmap() {
+      const canvas = document.getElementById('heatmap-canvas');
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width || 448;
+      canvas.height = rect.height || 560;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const doc = documents[currentDocIdx];
+
+      if (heatmapMode === 'single') {
+        const match = doc.tokenRegions[selectedToken];
+        if (match) {
+          renderGaussianSpot(ctx, match.x * canvas.width, match.y * canvas.height, match.r * canvas.width, 0.75);
+        }
+      } else {
+        currentTokens.forEach(token => {
+          const lower = token.toLowerCase();
+          const match = doc.tokenRegions[lower];
+          if (match) {
+            renderGaussianSpot(ctx, match.x * canvas.width, match.y * canvas.height, match.r * canvas.width * 0.8, 0.5);
+          }
+        });
+      }
+    }
+
+    function drawHeatmapForToken(token) {
+      selectedToken = token;
+      drawHeatmap();
+    }
+
+    function renderGaussianSpot(ctx, cx, cy, radius, maxAlpha) {
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+      grad.addColorStop(0, `rgba(239, 68, 68, ${maxAlpha})`);
+      grad.addColorStop(0.35, `rgba(245, 158, 11, ${maxAlpha*0.8})`);
+      grad.addColorStop(0.7, `rgba(37, 99, 235, ${maxAlpha*0.4})`);
+      grad.addColorStop(1, 'rgba(30, 58, 138, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function setHeatmapMode(mode) {
+      heatmapMode = mode;
+      if (mode === 'single') {
+        document.getElementById('hm-mode-single').className = "px-2 py-1 rounded text-xs font-bold bg-blue-600 text-white shadow-sm";
+        document.getElementById('hm-mode-full').className = "px-2 py-1 rounded text-xs font-semibold bg-slate-200 text-slate-700";
+      } else {
+        document.getElementById('hm-mode-full').className = "px-2 py-1 rounded text-xs font-bold bg-blue-600 text-white shadow-sm";
+        document.getElementById('hm-mode-single').className = "px-2 py-1 rounded text-xs font-semibold bg-slate-200 text-slate-700";
+      }
+      drawHeatmap();
+    }
+
+    function toggleGridLines() {
+      showGrid = !showGrid;
+      const grid = document.getElementById('patch-grid');
+      grid.style.opacity = showGrid ? '0.35' : '0';
+      if (showGrid && grid.children.length === 0) {
+        for (let i = 0; i < 256; i++) {
+          const cell = document.createElement('div');
+          cell.className = 'border border-blue-400';
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    function toggleOcrView() {
+      const box = document.getElementById('ocr-view-box');
+      const btn = document.getElementById('ocr-toggle-btn');
+      if (box.classList.contains('hidden')) {
+        box.classList.remove('hidden');
+        btn.innerText = 'Hide OCR Breakdown';
+      } else {
+        box.classList.add('hidden');
+        btn.innerText = 'Show OCR Text Breakdown';
+      }
+    }
+
+    // --- Slide Deck Logic (With Data from Vijay's PPT) ---
+    const slidesData = [
+      {
+        title: "Slide 1: Technical Seminar Title & Institutional Identity",
+        subtitle: "Department of Information Technology &bull; Trinity Academy of Engineering",
+        bullets: [
+          "<strong>Title:</strong> “Visual-Document Retrieval and Question Answering Using ColPali”",
+          "<strong>Presenter:</strong> Mr. Vijay Ramchandra Bhange &bull; Roll No: <strong>06</strong>",
+          "<strong>Internal Project Guide:</strong> Prof. Gulnaz Thakur &bull; Department of Information Technology",
+          "<strong>Institution:</strong> Trinity Academy of Engineering, Pune (Savitribai Phule Pune University)",
+          "<strong>Broader Context:</strong> Part of the project “RAG for Intelligent Document Retrieval and Question Answering”"
+        ]
+      },
+      {
+        title: "Slide 2: Failure Analysis of Traditional OCR Pipelines",
+        subtitle: "Why Traditional Text RAG Fails on Real Documents",
+        bullets: [
+          "<strong>Traditional Pipeline:</strong> PDF &rarr; OCR (Tesseract / AWS Textract) &rarr; Text Chunker &rarr; Dense Bi-Encoder Embedder.",
+          "<strong>Table Grid Loss:</strong> Table headers dissociate from their row values, destroying financial statements and medical lab reports.",
+          "<strong>Multi-Column Chaos:</strong> Text extracted from two-column academic formats reads horizontally across columns, breaking sentence context.",
+          "<strong>Visual Blindness:</strong> Bar charts, pie charts, and flowcharts contain no raw text stream and are completely ignored by OCR."
+        ]
+      },
+      {
+        title: "Slide 3: ColPali Architecture & Methodology",
+        subtitle: "Visual-Document Retrieval via Vision-Language Multi-Vectors",
+        bullets: [
+          "<strong>Visual Encoding:</strong> Treats each PDF page directly as an image (448&times;448 or dynamic resolution) through a Vision-Language Model (PaliGemma-3B / Qwen2-VL).",
+          "<strong>Patch Representation:</strong> Vision Transformer (ViT) produces 1,024 patch vectors per page, retaining typography, layout, and visual geometry.",
+          "<strong>Linear Projection Layer:</strong> Maps LLM hidden dimension down to 128 dimensions followed by L2 normalization for compact storage.",
+          "<strong>Late Interaction (MaxSim):</strong> Matches each query token to its single most relevant visual patch on the document page."
+        ]
+      },
+      {
+        title: "Slide 4: Mathematical Deep-Dive - Late Interaction MaxSim",
+        subtitle: "Token-Level Relevance Scoring Formulation",
+        bullets: [
+          "Formula: $\\text{MaxSim}(Q, D) = \\sum_{i=1}^{m} \\max_{j=1}^{n} (\\vec{q}_i \\cdot \\vec{d}_j)$",
+          "Every individual token in the query searches for its single maximum cosine similarity match across all document visual patches.",
+          "Preserves granular token-level alignment without the quadratic complexity of cross-encoders.",
+          "Vectorized PyTorch implementation: <code>torch.einsum('bnd,csd->bcns', query, doc).amax(3).sum(2)</code>."
+        ]
+      },
+      {
+        title: "Slide 5: Comparative Study of Four RAG Approaches",
+        subtitle: "ColPali, CRAG, DPR, and RAPTOR in Academic Practice",
+        bullets: [
+          "<strong>1. ColPali (Vijay Bhange):</strong> Visual-first retrieval using multi-vector patch embeddings; best for tables, charts, and layouts.",
+          "<strong>2. CRAG (Nisha Nale):</strong> Corrective RAG; evaluates retrieval quality and triggers corrective actions when initial evidence is weak.",
+          "<strong>3. DPR (Kanak Gupta):</strong> Dense Passage Retrieval; dual-encoder text retrieval focusing on evidence support and claim verification.",
+          "<strong>4. RAPTOR (Aditi Guddeti):</strong> Hierarchical retrieval; recursive clustering and summarization into a multi-layered summary tree."
+        ]
+      },
+      {
+        title: "Slide 6: Scalability & Hierarchical Token Pooling",
+        subtitle: "Overcoming Multi-Vector Storage Overhead",
+        bullets: [
+          "A naive multi-vector index requires storing 1,024 vectors per page.",
+          "Implemented <strong>Hierarchical Token Pooling</strong>: merges contiguous background and whitespace patches.",
+          "A pool factor of 3 achieves a <strong>66.7% reduction</strong> in vector storage while retaining <strong>97.8%</strong> retrieval accuracy.",
+          "Fully compatible with production vector search engines like Vespa, PLAID, and Qdrant."
+        ]
+      },
+      {
+        title: "Slide 7: Benchmark Results & Seminar Conclusion",
+        subtitle: "Evaluation Summary & Future Directions",
+        bullets: [
+          "On the standard ViDoRe benchmark, ColPali variants achieve <strong>84.8% to 89.4%</strong> nDCG@5, outperforming text-only RAG (65.2%) by over 24 percentage points.",
+          "Eliminates multi-step fragile ETL pipelines in document retrieval systems.",
+          "Presented as a technical seminar project by <strong>Vijay Ramchandra Bhange (06)</strong> at <strong>Trinity Academy of Engineering, Pune</strong>.",
+          "Demonstrates that vision-first late interaction is the definitive future of intelligent document understanding."
+        ]
+      }
+    ];
+
+    let currentSlide = 0;
+
+    function renderSlide(idx) {
+      currentSlide = idx;
+      document.getElementById('current-slide-num').innerText = idx + 1;
+      document.getElementById('total-slides-num').innerText = slidesData.length;
+      
+      const slide = slidesData[idx];
+      const content = `
+        <div class="space-y-4">
+          <div class="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs font-bold uppercase tracking-wider">
+            ${slide.subtitle}
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            ${slide.title}
+          </h2>
+          <div class="mt-6 space-y-3">
+            ${slide.bullets.map(b => `
+              <div class="flex items-start space-x-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                <div class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                  <i class="fa-solid fa-check text-[10px]"></i>
+                </div>
+                <div class="text-sm text-slate-700 leading-relaxed">${b}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      document.getElementById('slide-content-area').innerHTML = content;
+      if (window.renderMathInElement) {
+        renderMathInElement(document.getElementById('slide-content-area'));
+      }
+
+      const dotsContainer = document.getElementById('slide-dots');
+      dotsContainer.innerHTML = '';
+      slidesData.forEach((_, i) => {
+        const dot = document.createElement('button');
+        dot.className = `w-2.5 h-2.5 rounded-full transition-all ${i === idx ? 'bg-blue-600 w-6' : 'bg-slate-300 hover:bg-slate-400'}`;
+        dot.onclick = () => renderSlide(i);
+        dotsContainer.appendChild(dot);
+      });
+
+      document.getElementById('prev-slide-btn').disabled = (idx === 0);
+      document.getElementById('next-slide-btn').disabled = (idx === slidesData.length - 1);
+    }
+
+    function nextSlide() {
+      if (currentSlide < slidesData.length - 1) renderSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) renderSlide(currentSlide - 1);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('tab-slides').classList.contains('hidden')) {
+        if (e.key === 'ArrowRight') nextSlide();
+        if (e.key === 'ArrowLeft') prevSlide();
+      }
+    });
+
+    // --- Benchmark Chart ---
+    function initBenchmarkChart() {
+      window.chartInitialized = true;
+      const ctx = document.getElementById('benchmarkChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['ColQwen2.5-v0.2', 'ColQwen2-v1.0', 'ColPali-v1.3', 'ColSmol-500M', 'BGE-M3 (OCR+Text)', 'BM25 (Keyword)'],
+          datasets: [{
+            label: 'ViDoRe Benchmark nDCG@5 Score (%)',
+            data: [89.4, 89.3, 84.8, 82.3, 65.2, 59.8],
+            backgroundColor: [
+              '#2563eb',
+              '#3b82f6',
+              '#60a5fa',
+              '#93c5fd',
+              '#f59e0b',
+              '#ef4444'
+            ],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: { callback: v => v + '%' }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    // --- Viva Q&A Accordion Items ---
+    const vivaItems = [
+      {
+        q: "1. Why use Late Interaction (MaxSim) instead of a single dense vector embedding?",
+        a: "A single-vector bi-encoder compresses an entire complex document (with dozens of rows, columns, and graphics) into one 768-d vector. This creates a severe information bottleneck where fine-grained numbers and chart details get washed out. ColPali outputs an individual vector for every patch on the page, allowing each word in the query to find its exact spatial visual match."
+      },
+      {
+        q: "2. Why is ColPali projected to 128 dimensions rather than keeping the LLM's 2048 dimensions?",
+        a: "A typical page yields ~1,024 patches. Storing 1,024 patches &times; 2,048 dimensions in float16 would require over 4 megabytes per page. By adding a linear projection layer (<code>custom_text_proj</code>) down to 128 dimensions, storage is reduced by 93.7% while preserving full semantic retrieval fidelity."
+      },
+      {
+        q: "3. What is the loss function used to train ColPali?",
+        a: "It uses the ColBERT InfoNCE contrastive loss (<code>ColbertLoss</code>). For a batch of B queries and positive pages, the other B-1 pages in the batch act as in-batch negative documents. The model minimizes cross-entropy: $\\mathcal{L} = -\\log \\frac{\\exp(\\text{MaxSim}(Q, D^+)/\\tau)}{\\sum \\exp(\\text{MaxSim}(Q, D)/\\tau)}$ with temperature $\\tau = 0.02$."
+      },
+      {
+        q: "4. How does ColPali achieve explainability without bounding box annotations?",
+        a: "Because MaxSim computes the inner product between query token $\\vec{q}_i$ and each image patch $\\vec{d}_j$, we can directly take $\\vec{q}_i \\cdot \\vec{d}_j$ across the 2D grid $(x, y)$ and plot a heatmap overlay. The model discovers token-to-visual alignments naturally via contrastive objective."
+      },
+      {
+        q: "5. What is the role of Hierarchical Token Pooling?",
+        a: "In real document images, many patches are blank margins or repetitive background noise. Hierarchical Token Pooling agglomerates adjacent and semantically similar patch vectors, reducing the token count by 66.7% while preserving 97.8% of the retrieval score."
+      },
+      {
+        q: "6. How does your ColPali study fit into the broader RAG project at TAE?",
+        a: "Our seminar team at Trinity Academy of Engineering is comparing four complementary RAG paradigms: ColPali (Visual RAG for tables and layout, my focus), CRAG (evaluating and correcting weak retrieval), DPR (dense text evidence retrieval and hallucination detection), and RAPTOR (hierarchical tree retrieval for long documents). Together, this provides a complete framework for reliable question answering."
+      }
+    ];
+
+    function renderViva() {
+      const container = document.getElementById('viva-questions-list');
+      container.innerHTML = vivaItems.map((item, idx) => `
+        <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+          <button onclick="toggleViva(${idx})" class="w-full p-4 text-left font-bold text-sm text-slate-800 bg-slate-50 hover:bg-blue-50/50 flex items-center justify-between transition-colors">
+            <span>${item.q}</span>
+            <i id="viva-icon-${idx}" class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform"></i>
+          </button>
+          <div id="viva-ans-${idx}" class="hidden p-4 text-xs text-slate-600 leading-relaxed border-t border-slate-200 bg-white">
+            ${item.a}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleViva(idx) {
+      const ans = document.getElementById(`viva-ans-${idx}`);
+      const icon = document.getElementById(`viva-icon-${idx}`);
+      if (ans.classList.contains('hidden')) {
+        ans.classList.remove('hidden');
+        icon.classList.add('rotate-180');
+      } else {
+        ans.classList.add('hidden');
+        icon.classList.remove('rotate-180');
+      }
+    }
+
+    // --- Initialization on Load ---
+    window.onload = () => {
+      selectDoc(0);
+      renderSlide(0);
+      renderViva();
+    };
+
+    window.onresize = () => {
+      drawHeatmap();
+    };
+  </script>
+</body>
+</html>
